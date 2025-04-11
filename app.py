@@ -3,6 +3,7 @@ from database.db_setup import init_db, db_session
 from database.models import Route, Stop, Trip, StopTime, Shape, User, UserFavoriteRoute
 from services.gtfs_service import load_static_gtfs_data
 import os
+import numpy as np
 from services.realtime_service import fetch_vehicle_positions, fetch_trip_updates
 from services.alert_service import fetch_service_alerts, filter_alerts_by_route, get_active_alerts
 
@@ -75,6 +76,27 @@ def get_alerts():
     except Exception as e:
         print(f"Error fetching alerts: {e}")
         return jsonify([])
+
+# Major functions
+def find_nearby_stops(lat, lon, radius):
+    nearby = []
+    stops = Stop.query.all()
+    for stop in stops:
+        try:
+            stop_lat = float(stop.stop_lat)
+            stop_lon = float(stop.stop_lon)
+            dist = np.sqrt((stop_lat - lat)**2 + (stop_lon - lon)**2) * 111
+            if dist <= radius:
+                nearby.append({
+                    'stop_id': stop.stop_id,
+                    'stop_name': stop.stop_name,
+                    'stop_lat': stop_lat,
+                    'stop_lon': stop_lon,
+                    'distance': round(dist, 2)
+                })
+        except (ValueError, TypeError):
+            continue
+    return nearby
 
 if __name__ == '__main__':
     app.run(debug=True)
