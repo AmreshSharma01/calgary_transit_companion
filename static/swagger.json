@@ -1,0 +1,875 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Calgary Transit API",
+    "description": "API for accessing Calgary Transit data and user accounts",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/routes": {
+      "get": {
+        "summary": "Get all routes",
+        "description": "Returns a list of all transit routes",
+        "parameters": [
+          {
+            "name": "route_type",
+            "in": "query",
+            "description": "Filter by route type",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of routes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Route"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/routes/{route_id}": {
+      "get": {
+        "summary": "Get a specific route",
+        "description": "Returns details for a specific route",
+        "parameters": [
+          {
+            "name": "route_id",
+            "in": "path",
+            "required": true,
+            "description": "Route ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Route details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Route not found"
+          }
+        }
+      }
+    },
+    "/stops": {
+      "get": {
+        "summary": "Get all stops",
+        "description": "Returns a list of all transit stops",
+        "parameters": [
+          {
+            "name": "zone_id",
+            "in": "query",
+            "description": "Filter by zone ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "description": "Items per page",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of stops",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Stop"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stops/nearby": {
+      "get": {
+        "summary": "Get nearby stops",
+        "description": "Returns stops near specified coordinates",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "description": "Latitude",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "lon",
+            "in": "query",
+            "required": true,
+            "description": "Longitude",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "radius",
+            "in": "query",
+            "description": "Search radius in kilometers",
+            "schema": {
+              "type": "number",
+              "default": 0.5,
+              "maximum": 5.0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of nearby stops",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NearbyStop"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid coordinates or radius"
+          }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "summary": "Search for routes",
+        "description": "Find routes between two locations",
+        "parameters": [
+          {
+            "name": "start_lat",
+            "in": "query",
+            "required": true,
+            "description": "Starting latitude",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "start_lon",
+            "in": "query",
+            "required": true,
+            "description": "Starting longitude",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "end_lat",
+            "in": "query",
+            "required": true,
+            "description": "Ending latitude",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "end_lon",
+            "in": "query",
+            "required": true,
+            "description": "Ending longitude",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResults"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid coordinates"
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "description": "Create a new user account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "email", "password"],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "example": "user123"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "securepassword"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/UserPublic"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields"
+          },
+          "409": {
+            "description": "Username or email already taken"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login",
+        "description": "Authenticate a user and get JWT tokens",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "example": "user123"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "securepassword"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "refresh_token": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/UserPublic"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing username or password"
+          },
+          "401": {
+            "description": "Invalid username or password"
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "summary": "Refresh token",
+        "description": "Get a new access token using a refresh token",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "New access token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired refresh token"
+          }
+        }
+      }
+    },
+    "/users/profile": {
+      "get": {
+        "summary": "Get user profile",
+        "description": "Get the current user's profile information",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update user profile",
+        "description": "Update the current user's profile information",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/UserPublic"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "409": {
+            "description": "Email already in use"
+          }
+        }
+      }
+    },
+    "/users/favorites": {
+      "get": {
+        "summary": "Get favorite routes",
+        "description": "Get the current user's favorite routes",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of favorite routes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FavoriteRoute"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "summary": "Add favorite route",
+        "description": "Add a route to the current user's favorites",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["route_id"],
+                "properties": {
+                  "route_id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Route added to favorites",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "favorite": {
+                      "$ref": "#/components/schemas/FavoriteRoute"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing route_id"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Route not found"
+          }
+        }
+      }
+    },
+    "/users/favorites/{favorite_id}": {
+      "delete": {
+        "summary": "Remove favorite route",
+        "description": "Remove a route from the current user's favorites",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "favorite_id",
+            "in": "path",
+            "required": true,
+            "description": "Favorite ID",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Route removed from favorites",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Favorite not found or not owned by user"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Route": {
+        "type": "object",
+        "properties": {
+          "route_id": {
+            "type": "string"
+          },
+          "route_short_name": {
+            "type": "string"
+          },
+          "route_long_name": {
+            "type": "string"
+          },
+          "route_type": {
+            "type": "integer"
+          },
+          "route_color": {
+            "type": "string"
+          },
+          "route_text_color": {
+            "type": "string"
+          },
+          "route_url": {
+            "type": "string"
+          }
+        }
+      },
+      "RouteDetails": {
+        "type": "object",
+        "properties": {
+          "route_id": {
+            "type": "string"
+          },
+          "route_short_name": {
+            "type": "string"
+          },
+          "route_long_name": {
+            "type": "string"
+          },
+          "route_type": {
+            "type": "integer"
+          },
+          "route_color": {
+            "type": "string"
+          },
+          "route_text_color": {
+            "type": "string"
+          },
+          "route_url": {
+            "type": "string"
+          },
+          "trips_count": {
+            "type": "integer"
+          },
+          "trip_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Stop": {
+        "type": "object",
+        "properties": {
+          "stop_id": {
+            "type": "string"
+          },
+          "stop_code": {
+            "type": "string"
+          },
+          "stop_name": {
+            "type": "string"
+          },
+          "stop_desc": {
+            "type": "string"
+          },
+          "stop_lat": {
+            "type": "string"
+          },
+          "stop_lon": {
+            "type": "string"
+          },
+          "zone_id": {
+            "type": "string"
+          },
+          "stop_url": {
+            "type": "string"
+          },
+          "location_type": {
+            "type": "integer"
+          }
+        }
+      },
+      "NearbyStop": {
+        "type": "object",
+        "properties": {
+          "stop_id": {
+            "type": "string"
+          },
+          "stop_name": {
+            "type": "string"
+          },
+          "stop_lat": {
+            "type": "string"
+          },
+          "stop_lon": {
+            "type": "string"
+          },
+          "distance": {
+            "type": "number",
+            "description": "Distance in kilometers"
+          }
+        }
+      },
+      "SearchResults": {
+        "type": "object",
+        "properties": {
+          "start_stops": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "stop_id": {
+                  "type": "string"
+                },
+                "stop_name": {
+                  "type": "string"
+                },
+                "stop_lat": {
+                  "type": "string"
+                },
+                "stop_lon": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "end_stops": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "stop_id": {
+                  "type": "string"
+                },
+                "stop_name": {
+                  "type": "string"
+                },
+                "stop_lat": {
+                  "type": "string"
+                },
+                "stop_lon": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "routes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "route_id": {
+                  "type": "string"
+                },
+                "route_short_name": {
+                  "type": "string"
+                },
+                "route_long_name": {
+                  "type": "string"
+                },
+                "route_type": {
+                  "type": "integer"
+                },
+                "route_color": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "UserPublic": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "FavoriteRoute": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "route_id": {
+            "type": "string"
+          },
+          "route_short_name": {
+            "type": "string"
+          },
+          "route_long_name": {
+            "type": "string"
+          },
+          "route_type": {
+            "type": "integer"
+          },
+          "route_color": {
+            "type": "string"
+          },
+          "added_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}
