@@ -9,6 +9,7 @@ class Route(Base):
     route_id = Column(String(50), primary_key=True)
     route_short_name = Column(String(50), nullable=True)
     route_long_name = Column(String(255), nullable=True)
+    route_desc = Column(String(255), nullable=True)
     route_type = Column(Integer, nullable=True)
     route_url = Column(String(255), nullable=True)
     route_color = Column(String(10), nullable=True)
@@ -66,7 +67,7 @@ class StopTime(Base):
     pickup_type = Column(Integer, default=0, nullable=True)
     drop_off_type = Column(Integer, default=0, nullable=True)
     shape_dist_traveled = Column(Float, nullable=True)
-    
+    timepoint = Column(Integer) 
     trip = relationship("Trip", back_populates="stop_times")
     stop = relationship("Stop", back_populates="stop_times")
     
