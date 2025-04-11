@@ -4,12 +4,15 @@ from database.models import Route, Stop, Trip, StopTime, Shape, User, UserFavori
 from services.gtfs_service import load_static_gtfs_data
 import os
 from services.realtime_service import fetch_vehicle_positions, fetch_trip_updates
+from services.alert_service import fetch_service_alerts, filter_alerts_by_route, get_active_alerts
+
 
 app = Flask(__name__)
 
 GTFS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'gtfs')
 VEHICLE_URL = "https://data.calgary.ca/download/am7c-qe3u/application%2Foctet-stream"
 TRIP_UPDATE_URL = "https://data.calgary.ca/download/gs4m-mdc2/application%2Foctet-stream"
+ALERT_URL = "https://data.calgary.ca/download/jhgn-ynqj/application%2Foctet-stream"
 
 def setup(force_reload=False):
     init_db()
@@ -55,6 +58,23 @@ def get_trips():
     trips = fetch_trip_updates(TRIP_UPDATE_URL)
     return jsonify(trips)
 
+@app.route('/api/alerts')
+def get_alerts():
+    try:
+        alerts = fetch_service_alerts(ALERT_URL)
+        
+        route_id = request.args.get('route_id')
+        if route_id:
+            alerts = filter_alerts_by_route(alerts, route_id)
+            
+        include_inactive = request.args.get('include_inactive', 'false').lower() == 'true'
+        if not include_inactive:
+            alerts = get_active_alerts(alerts)
+            
+        return jsonify(alerts)
+    except Exception as e:
+        print(f"Error fetching alerts: {e}")
+        return jsonify([])
 
 if __name__ == '__main__':
     app.run(debug=True)
