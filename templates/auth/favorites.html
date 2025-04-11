@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}My Favorite Routes - Calgary Transit App{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">My Favorite Routes</h4>
+            <a href="{{ url_for('profile') }}" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-user me-1"></i> Back to Profile
+            </a>
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            {% if favorite_routes %}
+                <div class="list-group">
+                    {% for favorite in favorite_routes %}
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <div>
+                                    <span class="route-badge" style="background-color: #{{ favorite.route.route_color or '6c757d' }}; color: #{{ favorite.route.route_text_color or 'ffffff' }}">
+                                        {{ favorite.route.route_short_name }}
+                                    </span>
+                                    <span class="ms-2 fw-bold">{{ favorite.route.route_long_name }}</span>
+                                    <div class="small text-muted mt-1">
+                                        Added on {{ favorite.added_at.strftime('%B %d, %Y') }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <a href="{{ url_for('route_details', route_id=favorite.route_id) }}" class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="fas fa-map-marked-alt me-1"></i> View Route
+                                    </a>
+                                    <form method="POST" action="{{ url_for('remove_favorite', favorite_id=favorite.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-heart-broken me-1"></i> Remove
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                    <h5>No favorite routes yet</h5>
+                    <p class="text-muted">Start by exploring routes and saving your favorites</p>
+                    <a href="/" class="btn btn-primary">Explore Routes</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.route-badge {
+    display: inline-block;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+}
+</style>
+{% endblock %}
