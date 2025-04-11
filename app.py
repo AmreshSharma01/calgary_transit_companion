@@ -55,5 +55,6 @@ def get_trips():
     trips = fetch_trip_updates(TRIP_UPDATE_URL)
     return jsonify(trips)
 
+
 if __name__ == '__main__':
     app.run(debug=True)
