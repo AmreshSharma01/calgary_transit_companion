@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile - Calgary Transit App{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Profile</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="avatar-circle mx-auto mb-3">
+                            <span class="avatar-initials">{{ current_user.username[0]|upper }}</span>
+                        </div>
+                        <h5>{{ current_user.username }}</h5>
+                        <p class="text-muted">{{ current_user.email }}</p>
+                        <small class="text-muted">Member since: {{ current_user.created_at.strftime('%B %d, %Y') }}</small>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-primary">Edit Profile</a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Saved Routes</h4>
+                </div>
+                <div class="card-body">
+                    {% if favorite_routes %}
+                        <div class="list-group">
+                            {% for favorite in favorite_routes %}
+                                <a href="{{ url_for('route_details', route_id=favorite.route_id) }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div>
+                                            <span class="route-label" style="background-color: #{{ favorite.route.route_color or '6c757d' }}; color: #{{ favorite.route.route_text_color or 'ffffff' }}">
+                                                {{ favorite.route.route_short_name }}
+                                            </span>
+                                            <span class="ms-2">{{ favorite.route.route_long_name }}</span>
+                                        </div>
+                                        <form method="POST" action="{{ url_for('remove_favorite', favorite_id=favorite.id) }}" class="d-inline">
+                                            {{ form.hidden_tag() }}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-heart-broken"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                            <h5>No favorite routes yet</h5>
+                            <p class="text-muted">Start by exploring routes and saving your favorites</p>
+                            <a href="/" class="btn btn-primary">Explore Routes</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card mt-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Recent Searches</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-5">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <h5>No recent searches</h5>
+                        <p class="text-muted">Your recent route searches will appear here</p>
+                        <a href="/search" class="btn btn-primary">Search Routes</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-circle {
+    width: 80px;
+    height: 80px;
+    background-color: var(--bs-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.avatar-initials {
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+}
+.route-label {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
