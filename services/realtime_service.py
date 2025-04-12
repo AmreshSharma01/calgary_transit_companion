@@ -3,6 +3,7 @@ import datetime
 from google.transit import gtfs_realtime_pb2
 
 def unix_to_time(ts):
+    """Convert Unix timestamp to datetime string"""
     try:
         if ts <= 0:
             return "N/A"
@@ -11,7 +12,15 @@ def unix_to_time(ts):
         return "N/A"
 
 def fetch_vehicle_positions(vehicle_url):
-  
+    """
+    Fetch real-time vehicle positions from GTFS-RT feed
+    
+    Args:
+        vehicle_url: URL for the vehicle positions feed
+        
+    Returns:
+        Dictionary of vehicle data keyed by trip_id
+    """
     try:
         feed = gtfs_realtime_pb2.FeedMessage()
         response = requests.get(vehicle_url)
@@ -39,7 +48,15 @@ def fetch_vehicle_positions(vehicle_url):
         return {}
 
 def fetch_trip_updates(trip_update_url):
-
+    """
+    Fetch real-time trip updates from GTFS-RT feed
+    
+    Args:
+        trip_update_url: URL for the trip updates feed
+        
+    Returns:
+        Dictionary of trip update data keyed by trip_id
+    """
     try:
         feed = gtfs_realtime_pb2.FeedMessage()
         response = requests.get(trip_update_url)

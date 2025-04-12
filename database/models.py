@@ -9,12 +9,12 @@ class Route(Base):
     route_id = Column(String(50), primary_key=True)
     route_short_name = Column(String(50), nullable=True)
     route_long_name = Column(String(255), nullable=True)
-    route_desc = Column(String(255), nullable=True)
     route_type = Column(Integer, nullable=True)
     route_url = Column(String(255), nullable=True)
     route_color = Column(String(10), nullable=True)
     route_text_color = Column(String(10), nullable=True)
     
+    # Relationships
     trips = relationship("Trip", back_populates="route")
     
     def __repr__(self):
@@ -33,6 +33,7 @@ class Stop(Base):
     stop_url = Column(String(255), nullable=True)
     location_type = Column(Integer, default=0, nullable=True)
     
+    # Relationships
     stop_times = relationship("StopTime", back_populates="stop")
     
     def __repr__(self):
@@ -49,6 +50,7 @@ class Trip(Base):
     block_id = Column(String(50), nullable=True)
     shape_id = Column(String(50), nullable=True)
     
+    # Relationships
     route = relationship("Route", back_populates="trips")
     stop_times = relationship("StopTime", back_populates="trip", order_by="StopTime.stop_sequence")
     
@@ -67,7 +69,8 @@ class StopTime(Base):
     pickup_type = Column(Integer, default=0, nullable=True)
     drop_off_type = Column(Integer, default=0, nullable=True)
     shape_dist_traveled = Column(Float, nullable=True)
-    timepoint = Column(Integer) 
+    
+    # Relationships
     trip = relationship("Trip", back_populates="stop_times")
     stop = relationship("Stop", back_populates="stop_times")
     
@@ -97,6 +100,7 @@ class User(UserMixin, Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, nullable=True)
     
+    # Relationships
     favorite_routes = relationship("UserFavoriteRoute", back_populates="user")
     
     def get_id(self):
@@ -117,6 +121,7 @@ class UserFavoriteRoute(Base):
     route_id = Column(String(50), ForeignKey('routes.route_id'), nullable=False)
     added_at = Column(DateTime, nullable=True)
     
+    # Relationships
     user = relationship("User", back_populates="favorite_routes")
     route = relationship("Route")
     

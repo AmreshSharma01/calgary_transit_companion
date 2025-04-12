@@ -4,20 +4,32 @@ from database.db_setup import db_session
 from database.models import Route, Stop, Trip, StopTime, Shape
 
 def load_static_gtfs_data(gtfs_dir):
+    """
+    Load static GTFS data from CSV files into the database
+    
+    Args:
+        gtfs_dir: Directory containing GTFS txt files
+    """
+    # Load routes
     load_routes(os.path.join(gtfs_dir, 'routes.txt'))
     
+    # Load stops
     load_stops(os.path.join(gtfs_dir, 'stops.txt'))
     
+    # Load trips
     load_trips(os.path.join(gtfs_dir, 'trips.txt'))
     
+    # Load stop times
     load_stop_times(os.path.join(gtfs_dir, 'stop_times.txt'))
     
+    # Load shapes
     load_shapes(os.path.join(gtfs_dir, 'shapes.txt'))
     
+    # Commit all changes
     db_session.commit()
 
 def load_routes(routes_file):
-
+    """Load routes from routes.txt"""
     if not os.path.exists(routes_file):
         print(f"Warning: {routes_file} not found")
         return
@@ -38,6 +50,7 @@ def load_routes(routes_file):
             db_session.add(route)
 
 def load_stops(stops_file):
+    """Load stops from stops.txt"""
     if not os.path.exists(stops_file):
         print(f"Warning: {stops_file} not found")
         return
@@ -45,6 +58,7 @@ def load_stops(stops_file):
     with open(stops_file, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
+            # Skip rows with missing required fields
             if not row.get('stop_id') or not row.get('stop_lat') or not row.get('stop_lon'):
                 continue
                 
@@ -62,6 +76,7 @@ def load_stops(stops_file):
             db_session.add(stop)
 
 def load_trips(trips_file):
+    """Load trips from trips.txt"""
     if not os.path.exists(trips_file):
         print(f"Warning: {trips_file} not found")
         return
@@ -69,6 +84,7 @@ def load_trips(trips_file):
     with open(trips_file, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
+            # Skip rows with missing required fields
             if not row.get('trip_id') or not row.get('route_id'):
                 continue
                 
@@ -84,6 +100,7 @@ def load_trips(trips_file):
             db_session.add(trip)
 
 def load_stop_times(stop_times_file):
+    """Load stop times from stop_times.txt"""
     if not os.path.exists(stop_times_file):
         print(f"Warning: {stop_times_file} not found")
         return
@@ -91,6 +108,7 @@ def load_stop_times(stop_times_file):
     with open(stop_times_file, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
+            # Skip rows with missing required fields
             if not row.get('trip_id') or not row.get('stop_id'):
                 continue
                 
@@ -108,6 +126,7 @@ def load_stop_times(stop_times_file):
             db_session.add(stop_time)
 
 def load_shapes(shapes_file):
+    """Load shapes from shapes.txt"""
     if not os.path.exists(shapes_file):
         print(f"Warning: {shapes_file} not found")
         return
@@ -115,6 +134,7 @@ def load_shapes(shapes_file):
     with open(shapes_file, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
+            # Skip rows with missing required fields
             if not row.get('shape_id') or not row.get('shape_pt_lat') or not row.get('shape_pt_lon'):
                 continue
                 
