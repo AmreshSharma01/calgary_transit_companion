@@ -1,0 +1,194 @@
+/* Custom styles for Transit App */
+
+/* Map markers */
+.user-location-marker {
+  width: 24px;
+  height: 24px;
+  background-color: #2196f3;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 24px;
+  color: white;
+  border: 2px solid white;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+.bus-stop-marker {
+  width: 20px;
+  height: 20px;
+  background-color: #4caf50;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 20px;
+  color: white;
+  border: 2px solid white;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+.vehicle-marker {
+  width: 22px;
+  height: 22px;
+  background-color: #ffc107;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 22px;
+  color: #333;
+  border: 2px solid white;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+.start-location-marker {
+  width: 24px;
+  height: 24px;
+  background-color: #4caf50;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 24px;
+  color: white;
+  border: 2px solid white;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+.end-location-marker {
+  width: 24px;
+  height: 24px;
+  background-color: #f44336;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 24px;
+  color: white;
+  border: 2px solid white;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+.route-stop-marker {
+  width: 12px;
+  height: 12px;
+  background-color: #673ab7;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 12px;
+  color: white;
+  border: 1px solid white;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Custom colors */
+.bg-orange {
+  background-color: #ff9800 !important;
+}
+
+/* Card hover effects */
+.card.hoverable {
+  transition: all 0.3s ease;
+}
+
+.card.hoverable:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom route accordion */
+.accordion-button:not(.collapsed) {
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+.accordion-button:focus {
+  box-shadow: none;
+  border-color: rgba(13, 110, 253, 0.25);
+}
+
+/* Prediction badges */
+.prediction-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.prediction-badge.early {
+  background-color: #4caf50;
+  color: white;
+}
+
+.prediction-badge.on-time {
+  background-color: #2196f3;
+  color: white;
+}
+
+.prediction-badge.delayed {
+  background-color: #ff9800;
+  color: white;
+}
+
+.prediction-badge.late {
+  background-color: #f44336;
+  color: white;
+}
+
+/* Crowding level indicators */
+.crowding-indicator {
+  display: flex;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.crowding-level {
+  display: inline-block;
+  width: 10px;
+  height: 20px;
+  margin-right: 2px;
+  border-radius: 2px;
+  background-color: #eee;
+}
+
+.crowding-level.active {
+  background-color: #4caf50;
+}
+
+.crowding-level.active.medium {
+  background-color: #ffc107;
+}
+
+.crowding-level.active.high {
+  background-color: #ff9800;
+}
+
+.crowding-level.active.very-high {
+  background-color: #f44336;
+}
+
+/* Custom buttons */
+.btn-transit {
+  background-color: #673ab7;
+  color: white;
+  border: none;
+}
+
+.btn-transit:hover {
+  background-color: #5e35b1;
+  color: white;
+}
+#loading-overlay {
+  display: none;
+}
+
+.form-submitting #loading-overlay {
+  display: flex;
+}
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  #map,
+  #route-map,
+  #search-map {
+    height: 350px;
+  }
+
+  .card-body {
+    padding: 0.75rem;
+  }
+
+  .accordion-button {
+    padding: 0.75rem;
+  }
+}
