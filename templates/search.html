@@ -1,0 +1,622 @@
+{% extends "base.html" %}
+
+{% block title %}Transit Routes{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item active">Transit Routes</li>
+                </ol>
+            </nav>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Transit Routes</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">Starting Point</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Nearby Stations:</strong></p>
+                                <ul class="list-group">
+                                    {% for stop in start_stops %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        {{ stop.stop_name }}
+                                        <span class="badge bg-primary rounded-pill">{{ stop.distance }} km</span>
+                                    </li>
+                                    {% else %}
+                                    <li class="list-group-item">No nearby stations found.</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">Destination</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Nearby Stations:</strong></p>
+                                <ul class="list-group">
+                                    {% for stop in end_stops %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        {{ stop.stop_name }}
+                                        <span class="badge bg-primary rounded-pill">{{ stop.distance }} km</span>
+                                    </li>
+                                    {% else %}
+                                    <li class="list-group-item">No nearby stations found.</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Available Routes -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Available Routes</h5>
+                </div>
+                <div class="card-body">
+                    {% if routes_data and (routes_data.direct_routes or routes_data.transfer_routes) %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Found routes connecting nearby stations.
+                        {% if routes_data.direct_routes %}
+                        <strong>{{ routes_data.direct_routes|length }}</strong> direct routes
+                        {% if routes_data.transfer_routes %} and {% endif %}
+                        {% endif %}
+                        {% if routes_data.transfer_routes %}
+                        <strong>{{ routes_data.transfer_routes|length }}</strong> routes with transfers.
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Direct Routes - Show these first -->
+                    {% if routes_data.direct_routes %}
+                    <h5 class="mt-4 mb-3">Direct Routes</h5>
+                    <div class="row">
+                        {% for route in routes_data.direct_routes %}
+                        <div class="col-md-12 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">Route {{ route.route_id }}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-2">{{ route.route_name }}</p>
+                                    <button class="btn btn-sm btn-primary w-100 show-route-btn" 
+                                            data-route-id="{{ route.route_id }}"
+                                            data-route-type="direct">
+                                        <i class="fas fa-map-marked-alt me-1"></i> Show on Map
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Transfer Routes -->
+                    {% if routes_data.transfer_routes %}
+                    <h5 class="mt-4 mb-3">Routes with Transfer</h5>
+                    <div class="row">
+                        {% for route in routes_data.transfer_routes %}
+                        <div class="col-md-12 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">Transfer Route</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <p class="mb-1"><strong>First Route:</strong> {{ route.start_route_name }}</p>
+                                        <p class="mb-2"><strong>Second Route:</strong> {{ route.end_route_name }}</p>
+                                        <p class="mb-0">
+                                            <strong>Transfer at:</strong> {{ route.transfer_stop_name }}
+                                        </p>
+                                    </div>
+                                    <button class="btn btn-sm btn-primary w-100 show-transfer-btn"
+                                            data-start-route-id="{{ route.start_route_id }}_1"
+                                            data-end-route-id="{{ route.end_route_id }}_2"
+                                            data-transfer-lat="{{ route.transfer_stop_lat }}"
+                                            data-transfer-lon="{{ route.transfer_stop_lon }}">
+                                        <i class="fas fa-map-marked-alt me-1"></i> Show on Map
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        No routes found connecting stations near your origin and destination.
+                    </div>
+                    {% endif %}
+                    
+                    <div class="text-center mt-4">
+                        <a href="/" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Search Another Location
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Route Map Column - Always visible -->
+        <div class="col-md-8">
+            <div class="card mb-4 sticky-top" style="top: 20px; z-index: 100;">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Route Map</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="route-map" style="height: 800px; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Wait until the document is fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Store references to important elements
+    const routeMap = document.getElementById('route-map');
+    const routeButtons = document.querySelectorAll('.show-route-btn');
+    const transferButtons = document.querySelectorAll('.show-transfer-btn');
+    
+    // Store route lines and markers for later reference
+    let routeLines = [];
+    let transferMarker = null;
+    let vehicleMarkers = [];
+    let activeRouteIds = new Set(); // Track all active route IDs
+    
+    // Route data from server
+    const routesData = {{ routes_data.shape_data|tojson if routes_data and routes_data.shape_data else {}|tojson }};
+    
+    // Coordinates
+    const startLat = {{ start_lat }};
+    const startLon = {{ start_lon }};
+    const endLat = {{ end_lat }};
+    const endLon = {{ end_lon }};
+    
+    // Initialize map if the element exists
+    if (routeMap) {
+        // Create map
+        const map = L.map('route-map').setView([
+            (startLat + endLat) / 2, 
+            (startLon + endLon) / 2
+        ], 13);
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Add markers for starting and destination points
+        const startMarker = L.marker([startLat, startLon], {
+            icon: L.divIcon({
+                html: '<i class="fas fa-play-circle" style="color:#28a745;font-size:24px;"></i>',
+                className: 'start-marker-icon',
+                iconSize: [24, 24]
+            })
+        }).addTo(map);
+        startMarker.bindPopup("Starting Point").openPopup();
+        
+        const endMarker = L.marker([endLat, endLon], {
+            icon: L.divIcon({
+                html: '<i class="fas fa-flag-checkered" style="color:#dc3545;font-size:24px;"></i>',
+                className: 'end-marker-icon',
+                iconSize: [24, 24]
+            })
+        }).addTo(map);
+        endMarker.bindPopup("Destination");
+        
+        // Add markers for nearby stops
+        {% for stop in start_stops %}
+        L.marker([{{ stop.stop_lat }}, {{ stop.stop_lon }}], {
+            icon: L.divIcon({
+                html: '<i class="fas fa-circle" style="color:#007bff;font-size:10px;"></i>',
+                className: 'stop-marker-icon',
+                iconSize: [10, 10]
+            })
+        }).addTo(map).bindPopup("{{ stop.stop_name }} ({{ stop.distance }} km from start)");
+        {% endfor %}
+        
+        {% for stop in end_stops %}
+        L.marker([{{ stop.stop_lat }}, {{ stop.stop_lon }}], {
+            icon: L.divIcon({
+                html: '<i class="fas fa-circle" style="color:#28a745;font-size:10px;"></i>',
+                className: 'stop-marker-icon',
+                iconSize: [10, 10]
+            })
+        }).addTo(map).bindPopup("{{ stop.stop_name }} ({{ stop.distance }} km from destination)");
+        {% endfor %}
+        
+        // Fit bounds to include all markers
+        const bounds = L.latLngBounds([
+            [startLat, startLon],
+            [endLat, endLon]
+        ]);
+        
+        // Extend bounds to include all stops
+        {% for stop in start_stops %}
+        bounds.extend([{{ stop.stop_lat }}, {{ stop.stop_lon }}]);
+        {% endfor %}
+        
+        {% for stop in end_stops %}
+        bounds.extend([{{ stop.stop_lat }}, {{ stop.stop_lon }}]);
+        {% endfor %}
+        
+        map.fitBounds(bounds, {padding: [50, 50]});
+        
+        // Function to clear all routes
+        function clearRoutes() {
+            if (routeLines.length) {
+                routeLines.forEach(line => map.removeLayer(line));
+                routeLines = [];
+            }
+            
+            if (transferMarker) {
+                map.removeLayer(transferMarker);
+                transferMarker = null;
+            }
+            
+            // Clear the active route IDs set
+            activeRouteIds.clear();
+            
+            // Clear vehicle markers
+            clearVehicleMarkers();
+        }
+        
+        // Function to clear vehicle markers
+        function clearVehicleMarkers() {
+            if (vehicleMarkers.length) {
+                vehicleMarkers.forEach(marker => map.removeLayer(marker));
+                vehicleMarkers = [];
+            }
+        }
+        
+        // Function to fetch and display real-time vehicle positions for a single route
+        function fetchVehiclePositions(routeId) {
+            // Add to active routes set
+            activeRouteIds.add(routeId);
+            
+            // Refresh all vehicles
+            refreshAllVehicles();
+        }
+        
+        // Function to refresh vehicles for all active routes
+        function refreshAllVehicles() {
+            // Clear any existing vehicle markers
+            clearVehicleMarkers();
+            
+            // Log active routes for debugging
+            console.log("Active Route IDs:", Array.from(activeRouteIds));
+            
+            // If no active routes, exit early
+            if (activeRouteIds.size === 0) {
+                console.log("No active routes to show vehicles for");
+                return;
+            }
+            
+            // Fetch vehicle positions from API
+            fetch('/api/vehicles')
+                .then(response => response.json())
+                .then(vehicles => {
+                    console.log("Total vehicles fetched:", Object.keys(vehicles).length);
+                    let vehiclesAdded = 0;
+                    
+                    // Process vehicle data
+                    Object.keys(vehicles).forEach(tripId => {
+                        const vehicle = vehicles[tripId];
+                        
+                        // Log for debugging
+                        console.log(`Vehicle route_id: ${vehicle.route_id}, is active: ${activeRouteIds.has(vehicle.route_id)}`);
+                        
+                        // Check if vehicle is on any of our active routes
+                        // Convert to string to ensure proper comparison
+                        const routeIdStr = String(vehicle.route_id);
+                        let isOnActiveRoute = false;
+                        
+                        // Check through all active routes manually
+                        activeRouteIds.forEach(activeId => {
+                            if (String(activeId) === routeIdStr) {
+                                isOnActiveRoute = true;
+                            }
+                        });
+                        
+                        if (isOnActiveRoute) {
+                            const lat = vehicle.lat;
+                            const lon = vehicle.lon;
+                            
+                            // Choose color based on route
+                            let markerColor = '#007bff'; // default blue
+                            
+                            // Create bus icon
+                            const vehicleMarker = L.marker([lat, lon], {
+                                icon: L.divIcon({
+                                    html: `<i class="fas fa-bus" style="color:${markerColor};font-size:20px;"></i>`,
+                                    className: 'vehicle-marker-icon',
+                                    iconSize: [20, 20]
+                                })
+                            }).addTo(map);
+                            
+                            // Add popup with vehicle info
+                            vehicleMarker.bindPopup(`
+                                <strong>Route ${vehicle.route_id}</strong><br>
+                                Trip: ${tripId}<br>
+                                Vehicle ID: ${vehicle.vehicle_id}<br>
+                                Updated: ${vehicle.timestamp}
+                            `);
+                            
+                            // Add to markers list for later removal
+                            vehicleMarkers.push(vehicleMarker);
+                            vehiclesAdded++;
+                        }
+                    });
+                    
+                    console.log(`Added ${vehiclesAdded} vehicle markers to the map`);
+                })
+                .catch(error => console.error('Error fetching vehicle positions:', error));
+        }
+        
+        // Auto-refresh vehicle positions every 30 seconds
+        function startVehicleRefresh() {
+            setInterval(() => {
+                if (activeRouteIds.size > 0) {
+                    refreshAllVehicles();
+                }
+            }, 30000);
+        }
+        
+        // Start auto-refresh
+        startVehicleRefresh();
+        
+        // Function to show a direct route on the map
+        function showRouteOnMap(routeId) {
+            // Clear existing routes
+            clearRoutes();
+            
+            // Get shape data for this route
+            const shapeData = routesData[routeId];
+            if (shapeData && shapeData.length) {
+                // Create polyline
+                const latlngs = shapeData.map(p => [p.lat, p.lng]);
+                const routeLine = L.polyline(latlngs, {
+                    color: '#0078d4',
+                    weight: 5,
+                    opacity: 0.8
+                }).addTo(map);
+                
+                // Store for later removal
+                routeLines.push(routeLine);
+                
+                // Fit map to route
+                map.fitBounds(routeLine.getBounds(), {padding: [50, 50]});
+                
+                // If route consists of just two points, add midpoint markers
+                if (latlngs.length === 2) {
+                    // Calculate midpoint
+                    const midLat = (latlngs[0][0] + latlngs[1][0]) / 2;
+                    const midLon = (latlngs[0][1] + latlngs[1][1]) / 2;
+                    
+                    // Add route marker
+                    const routeMarker = L.marker([midLat, midLon], {
+                        icon: L.divIcon({
+                            html: `<div style="color:white;font-weight:bold;font-size:12px;line-height:20px;">Route</div>`,
+                            className: 'route-marker-icon',
+                            iconSize: [50, 20]
+                        })
+                    }).addTo(map);
+                    
+                    routeLines.push(routeMarker);
+                }
+            } else {
+                // Create a straight line between origin and destination
+                const directLine = L.polyline([
+                    [startLat, startLon],
+                    [endLat, endLon]
+                ], {
+                    color: '#0078d4',
+                    weight: 4,
+                    opacity: 0.8,
+                    dashArray: '10, 10'
+                }).addTo(map);
+                
+                routeLines.push(directLine);
+                map.fitBounds(directLine.getBounds(), {padding: [50, 50]});
+                
+                // Add route ID in the middle
+                const midLat = (startLat + endLat) / 2;
+                const midLon = (startLon + endLon) / 2;
+                
+                const routeMarker = L.marker([midLat, midLon], {
+                    icon: L.divIcon({
+                        html: `<div style="color:white;font-weight:bold;font-size:12px;line-height:20px;">Route ${routeId}</div>`,
+                        className: 'route-marker-icon',
+                        iconSize: [50, 20]
+                    })
+                }).addTo(map);
+                
+                routeLines.push(routeMarker);
+            }
+        }
+        
+        // Function to show a transfer route on the map
+        function showTransferRouteOnMap(startRouteId, endRouteId, transferLat, transferLon) {
+            // Clear existing routes
+            clearRoutes();
+            
+            // Parse coordinates
+            transferLat = parseFloat(transferLat);
+            transferLon = parseFloat(transferLon);
+            
+            // Get shape data for both route segments
+            const startShapeData = routesData[startRouteId];
+            const endShapeData = routesData[endRouteId];
+            
+            let bounds = null;
+            
+            // Draw first leg
+            if (startShapeData && startShapeData.length) {
+                const latlngs = startShapeData.map(p => [p.lat, p.lng]);
+                const routeLine = L.polyline(latlngs, {
+                    color: '#0078d4',
+                    weight: 5,
+                    opacity: 0.8
+                }).addTo(map);
+                
+                // Store for later removal
+                routeLines.push(routeLine);
+                
+                // Initialize bounds
+                bounds = routeLine.getBounds();
+            } else {
+                // Create a line from start to transfer
+                const startToTransfer = L.polyline([
+                    [startLat, startLon],
+                    [transferLat, transferLon]
+                ], {
+                    color: '#0078d4',
+                    weight: 4,
+                    opacity: 0.8,
+                    dashArray: '10, 10'
+                }).addTo(map);
+                
+                routeLines.push(startToTransfer);
+                bounds = startToTransfer.getBounds();
+            }
+            
+            // Draw second leg
+            if (endShapeData && endShapeData.length) {
+                const latlngs = endShapeData.map(p => [p.lat, p.lng]);
+                const routeLine = L.polyline(latlngs, {
+                    color: '#28a745',
+                    weight: 5,
+                    opacity: 0.8
+                }).addTo(map);
+                
+                // Store for later removal
+                routeLines.push(routeLine);
+                
+                // Extend bounds
+                if (bounds) {
+                    bounds.extend(routeLine.getBounds());
+                } else {
+                    bounds = routeLine.getBounds();
+                }
+            } else {
+                // Create a line from transfer to end
+                const transferToEnd = L.polyline([
+                    [transferLat, transferLon],
+                    [endLat, endLon]
+                ], {
+                    color: '#28a745',
+                    weight: 4,
+                    opacity: 0.8,
+                    dashArray: '10, 10'
+                }).addTo(map);
+                
+                routeLines.push(transferToEnd);
+                if (bounds) {
+                    bounds.extend(transferToEnd.getBounds());
+                } else {
+                    bounds = transferToEnd.getBounds();
+                }
+            }
+            
+            // Add transfer point marker
+            transferMarker = L.marker([transferLat, transferLon], {
+                icon: L.divIcon({
+                    html: '<i class="fas fa-exchange-alt" style="color:#ffc107;font-size:24px;"></i>',
+                    className: 'transfer-marker-icon',
+                    iconSize: [24, 24]
+                })
+            }).addTo(map);
+            
+            transferMarker.bindPopup("Transfer Point").openPopup();
+            
+            // Fit map to include all routes
+            if (bounds) {
+                map.fitBounds(bounds, {padding: [50, 50]});
+            }
+        }
+        
+        // Add click events to route buttons
+        routeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const routeId = this.getAttribute('data-route-id');
+                showRouteOnMap(routeId);
+                
+                // Fetch and display real-time vehicle positions for this route
+                fetchVehiclePositions(routeId);
+            });
+        });
+        
+        // Add click events to transfer buttons
+        transferButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const startRouteId = this.getAttribute('data-start-route-id');
+                const endRouteId = this.getAttribute('data-end-route-id');
+                const transferLat = this.getAttribute('data-transfer-lat');
+                const transferLon = this.getAttribute('data-transfer-lon');
+                showTransferRouteOnMap(startRouteId, endRouteId, transferLat, transferLon);
+                
+                // Get the actual route IDs from the segment IDs
+                const actualStartRouteId = startRouteId.split('_')[0];
+                const actualEndRouteId = endRouteId.split('_')[0];
+                
+                // Show vehicles for both segments
+                fetchVehiclePositions(actualStartRouteId);
+                
+                // Only add the end route if it's different from the start route
+                if (actualEndRouteId !== actualStartRouteId) {
+                    fetchVehiclePositions(actualEndRouteId);
+                }
+            });
+        });
+        
+        // If there's only one direct route, select it automatically
+        if (routeButtons.length === 1) {
+            routeButtons[0].click();
+        }
+    }
+});
+</script>
+
+<style>
+/* Custom CSS for route markers */
+.route-marker-icon {
+    background: rgba(0, 120, 212, 0.8);
+    border-radius: 4px;
+    text-align: center;
+}
+.stop-marker-icon {
+    width: 10px !important;
+    height: 10px !important;
+}
+.transfer-marker-icon {
+    width: 24px !important;
+    height: 24px !important;
+}
+.vehicle-marker-icon {
+    width: 20px !important;
+    height: 20px !important;
+    z-index: 1000;
+}
+</style>
+{% endblock %}
