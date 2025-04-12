@@ -1,24 +1,415 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calgary Transit Companion App</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
+{% extends "base.html" %}
+
+{% block title %}Calgary Transit - Bus Finder{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Find Your Route</h5>
+                </div>
+                <div class="card-body">
+                    <form id="route-search-form" action="/search" method="get">
+                        <div class="mb-3">
+                            <label for="current-location" class="form-label">Current Location</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="start-location" name="start_location" placeholder="Enter address or..." required>
+                                <button class="btn btn-outline-secondary" type="button" id="get-location-btn">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </button>
+                            </div>
+                            <input type="hidden" id="start-lat" name="start_lat">
+                            <input type="hidden" id="start-lon" name="start_lon">
+                            <small class="form-text text-muted">Click the location icon to use your current location</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="destination" class="form-label">Destination</label>
+                            <input type="text" class="form-control" id="end-location" name="end_location" placeholder="Enter destination address" required>
+                            <input type="hidden" id="end-lat" name="end_lat">
+                            <input type="hidden" id="end-lon" name="end_lon">
+                        </div>
+                        
+                        <!-- Departure time functionality removed -->
+                        
+                        <!-- Add hidden max_results parameter -->
+                        <input type="hidden" name="max_results" value="5">
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Find Routes
+                        </button>
+                        <div class="form-text mt-2">Showing top 5 route options for faster results</div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Transit Conditions</h5>
+                </div>
+                <div class="card-body">
+                    <div id="weather-preview">
+                        <p class="mb-2"><i class="fas fa-cloud"></i> Loading weather...</p>
+                    </div>
+                    <div id="conditions-preview">
+                        <p class="mb-2"><i class="fas fa-bus"></i> Loading transit conditions...</p>
+                    </div>
+                    <div id="alerts-count" class="d-none">
+                        <p class="mb-2"><i class="fas fa-exclamation-triangle text-warning"></i> <span id="alerts-count-text">0</span> active service alerts</p>
+                    </div>
+                    <a href="/conditions" class="btn btn-info text-white mt-2">
+                        <i class="fas fa-info-circle me-1"></i> View Full Dashboard
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Nearby Stops</h5>
+                </div>
+                <div class="card-body">
+                    <div id="nearby-stops-loading" class="text-center d-none">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Finding stops near you...</p>
+                    </div>
+                    <div id="nearby-stops-content" class="d-none">
+                        <div class="list-group" id="nearby-stops-list"></div>
+                    </div>
+                    <div id="nearby-stops-placeholder">
+                        <p class="text-center text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            Click the location button above to find stops near you
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Transit Map</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="map" style="height: 500px; width: 100%;"></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Popular Routes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for route in routes[:6] %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">Route {{ route.route_short_name }}</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">{{ route.route_long_name }}</h6>
+                                    <a href="/route/{{ route.route_id }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize the map
+    function initMap() {
+        // Default center on Calgary
+        const defaultCenter = [51.0447, -114.0719];
+        const map = L.map('map').setView(defaultCenter, 13);
+        
+        // Add the OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Store map in global variable for later access
+        window.transitMap = map;
+        
+        // Initialize markers group
+        window.markersGroup = L.layerGroup().addTo(map);
+        
+        // Set up event handlers after map initialization
+        setupEventHandlers();
+    }
+    
+    function setupEventHandlers() {
+        // Location button click handler
+        document.getElementById('get-location-btn').addEventListener('click', function() {
+            getUserLocation();
+        });
+        
+        // Set up geocoding for location inputs
+        setupGeocoding('start-location', 'start-lat', 'start-lon');
+        setupGeocoding('end-location', 'end-lat', 'end-lon');
+    }
+    
+    function setupGeocoding(inputId, latId, lonId) {
+        const input = document.getElementById(inputId);
+        
+        input.addEventListener('blur', function() {
+            if (input.value.trim() !== '') {
+                geocodeAddress(input.value, function(lat, lon) {
+                    document.getElementById(latId).value = lat;
+                    document.getElementById(lonId).value = lon;
+                    
+                    // Update map with marker
+                    addMarkerToMap(lat, lon, input.value);
+                });
+            }
+        });
+    }
+    
+    function geocodeAddress(address, callback) {
+        // Using Nominatim for geocoding (in a production app, use a service with appropriate usage limits)
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    callback(lat, lon);
+                } else {
+                    alert('Address not found. Please try a different address.');
+                }
+            })
+            .catch(error => {
+                console.error('Geocoding error:', error);
+                alert('Error geocoding address. Please try again.');
+            });
+    }
+    
+    function getUserLocation() {
+        // Show loading state
+        document.getElementById('nearby-stops-placeholder').classList.add('d-none');
+        document.getElementById('nearby-stops-loading').classList.remove('d-none');
+        document.getElementById('nearby-stops-content').classList.add('d-none');
+        
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    // Update the form fields
+                    document.getElementById('start-lat').value = lat;
+                    document.getElementById('start-lon').value = lon;
+                    document.getElementById('start-location').value = 'Current Location';
+                    
+                    // Update map
+                    window.transitMap.setView([lat, lon], 15);
+                    addMarkerToMap(lat, lon, 'Your Location', true);
+                    
+                    // Fetch nearby stops
+                    fetchNearbyStops(lat, lon);
+                },
+                function(error) {
+                    console.error('Error getting location:', error);
+                    alert('Unable to get your location. Please check your browser permissions.');
+                    
+                    // Hide loading
+                    document.getElementById('nearby-stops-loading').classList.add('d-none');
+                    document.getElementById('nearby-stops-placeholder').classList.remove('d-none');
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                }
+            );
+        } else {
+            alert('Geolocation is not supported by your browser.');
+            
+            // Hide loading
+            document.getElementById('nearby-stops-loading').classList.add('d-none');
+            document.getElementById('nearby-stops-placeholder').classList.remove('d-none');
         }
-        h1 {
-            color: #0066cc;
+    }
+    
+    function addMarkerToMap(lat, lon, label, isUserLocation = false) {
+        // Clear previous markers of the same type
+        if (window.markersGroup) {
+            window.markersGroup.clearLayers();
         }
-    </style>
-</head>
-<body>
-    <h1>Calgary Transit Companion Application</h1>
-    <p>Welcome to our transit tracking application!</p>
-    <p>This is a group project with 3 members.</p>
-</body>
-</html>
+        
+        // Create marker with popup
+        const markerOptions = isUserLocation 
+            ? { icon: L.divIcon({ className: 'user-location-marker', html: '<i class="fas fa-user"></i>' }) }
+            : {};
+            
+        const marker = L.marker([lat, lon], markerOptions).addTo(window.markersGroup);
+        marker.bindPopup(label).openPopup();
+        
+        // Center map on marker
+        window.transitMap.setView([lat, lon], 15);
+    }
+    
+    function fetchNearbyStops(lat, lon) {
+        fetch(`/api/nearby_stops?lat=${lat}&lon=${lon}&radius=0.5`)
+            .then(response => response.json())
+            .then(stops => {
+                // Hide loading, show content
+                document.getElementById('nearby-stops-loading').classList.add('d-none');
+                document.getElementById('nearby-stops-content').classList.remove('d-none');
+                
+                // Populate list
+                const stopsList = document.getElementById('nearby-stops-list');
+                stopsList.innerHTML = '';
+                
+                if (stops.length === 0) {
+                    stopsList.innerHTML = '<p class="text-center text-muted">No stops found nearby</p>';
+                    return;
+                }
+                
+                // Add stops to list and map
+                stops.forEach(stop => {
+                    // Add to list
+                    const stopItem = document.createElement('a');
+                    stopItem.href = '#';
+                    stopItem.className = 'list-group-item list-group-item-action';
+                    stopItem.innerHTML = `
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">${stop.stop_name}</h6>
+                            <small>${stop.distance} km</small>
+                        </div>
+                        <small class="text-muted">Stop ID: ${stop.stop_id}</small>
+                    `;
+                    stopItem.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        
+                        // Set as destination
+                        document.getElementById('end-location').value = stop.stop_name;
+                        document.getElementById('end-lat').value = stop.stop_lat;
+                        document.getElementById('end-lon').value = stop.stop_lon;
+                        
+                        // Add marker to map
+                        addStopMarkerToMap(stop.stop_lat, stop.stop_lon, stop.stop_name, stop.stop_id);
+                    });
+                    stopsList.appendChild(stopItem);
+                    
+                    // Add to map
+                    addStopMarkerToMap(stop.stop_lat, stop.stop_lon, stop.stop_name, stop.stop_id);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching nearby stops:', error);
+                document.getElementById('nearby-stops-loading').classList.add('d-none');
+                document.getElementById('nearby-stops-placeholder').classList.remove('d-none');
+                alert('Error fetching nearby stops. Please try again.');
+            });
+    }
+    
+    function addStopMarkerToMap(lat, lon, name, id) {
+        // Create marker with custom icon for bus stops
+        const busStopIcon = L.divIcon({
+            className: 'bus-stop-marker',
+            html: '<i class="fas fa-bus"></i>',
+            iconSize: [20, 20]
+        });
+        
+        const marker = L.marker([lat, lon], { icon: busStopIcon }).addTo(window.transitMap);
+        marker.bindPopup(`<strong>${name}</strong><br>Stop ID: ${id}`);
+        
+        // Store in a global layer group for stops
+        if (!window.stopsLayer) {
+            window.stopsLayer = L.layerGroup().addTo(window.transitMap);
+        }
+        window.stopsLayer.addLayer(marker);
+    }
+    
+    // Load transit conditions for preview card
+    function loadTransitConditionsPreview() {
+        // Default to Calgary coordinates
+        const lat = 51.0447;
+        const lon = -114.0719;
+        
+        // Load weather data
+        fetch(`/api/weather?lat=${lat}&lon=${lon}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.weather_available) {
+                    // Update weather section
+                    const weatherHtml = `
+                        <p class="mb-1"><i class="fas fa-thermometer-half text-danger"></i> <strong>${data.temperature}°C</strong>, ${data.condition}</p>
+                    `;
+                    document.getElementById('weather-preview').innerHTML = weatherHtml;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading weather preview:', error);
+            });
+            
+        // Load transit conditions
+        fetch(`/api/transit-conditions?lat=${lat}&lon=${lon}`)
+            .then(response => response.json())
+            .then(data => {
+                // Update conditions section
+                let statusClass = 'text-success';
+                if (data.transit_impact && data.transit_impact.impact_level) {
+                    if (data.transit_impact.impact_level === 'high') {
+                        statusClass = 'text-danger';
+                    } else if (data.transit_impact.impact_level === 'medium') {
+                        statusClass = 'text-warning';
+                    }
+                }
+                
+                const conditionsHtml = `
+                    <p class="mb-1"><i class="fas fa-info-circle ${statusClass}"></i> <strong>${data.overall_status}</strong></p>
+                `;
+                document.getElementById('conditions-preview').innerHTML = conditionsHtml;
+                
+                // Update alerts count
+                if (data.alerts_count > 0) {
+                    document.getElementById('alerts-count').classList.remove('d-none');
+                    document.getElementById('alerts-count-text').textContent = data.alerts_count;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading transit conditions preview:', error);
+            });
+    }
+
+    // Initialize map when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        initMap();
+        loadTransitConditionsPreview();
+    });
+
+    // Add form submit handler
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('route-search-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const startLat = document.getElementById('start-lat').value;
+                const startLon = document.getElementById('start-lon').value;
+                const endLat = document.getElementById('end-lat').value;
+                const endLon = document.getElementById('end-lon').value;
+                
+                if (!startLat || !startLon || !endLat || !endLon) {
+                    e.preventDefault();
+                    alert('Please enter valid start and end locations');
+                    return false;
+                }
+                
+                // Add loading indicator
+                const submitBtn = this.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Searching...';
+                submitBtn.disabled = true;
+            });
+        }
+    });
+</script>
+{% endblock %}
