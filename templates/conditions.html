@@ -1,0 +1,570 @@
+{% extends "base.html" %}
+
+{% block title %}Transit Conditions - Calgary Transit Finder{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-cloud-sun-rain me-2"></i>
+                        Transit Conditions Dashboard
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">
+                        View current transit conditions and 5-day forecast for Calgary Transit, including weather impacts,
+                        service alerts, and predicted delays.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Current Transit Conditions
+                    </h5>
+                </div>
+                <div class="card-body" id="current-conditions-card">
+                    <div class="text-center" id="current-conditions-loading">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading current transit conditions...</p>
+                    </div>
+                    <div id="current-conditions-content" class="d-none">
+                        <div class="row">
+                            <div class="col-md-5 text-center mb-3">
+                                <div id="weather-icon" class="mb-2">
+                                    <i class="fas fa-cloud-sun fa-4x text-primary"></i>
+                                </div>
+                                <div id="weather-temp" class="display-4 mb-2">--°C</div>
+                                <div id="weather-desc" class="lead">Weather data loading...</div>
+                            </div>
+                            <div class="col-md-7">
+                                <h4 id="conditions-status" class="mb-3">Loading status...</h4>
+                                <div id="impact-badge" class="mb-3">
+                                    <span class="badge bg-secondary">Impact: Unknown</span>
+                                </div>
+                                <div id="alerts-badge" class="mb-3">
+                                    <span class="badge bg-secondary">Alerts: --</span>
+                                </div>
+                                <h5 class="mt-4">Recommendations:</h5>
+                                <ul id="recommendations-list" class="list-group">
+                                    <li class="list-group-item list-group-item-light">Loading recommendations...</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Active Service Alerts
+                    </h5>
+                </div>
+                <div class="card-body" id="alerts-card">
+                    <div class="text-center" id="alerts-loading">
+                        <div class="spinner-border text-warning" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading service alerts...</p>
+                    </div>
+                    <div id="alerts-content" class="d-none">
+                        <div id="alerts-list">
+                            <!-- Alerts will be inserted here -->
+                        </div>
+                        <div id="no-alerts" class="alert alert-success d-none">
+                            <i class="fas fa-check-circle me-2"></i> No active service alerts at this time.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Suggestion Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-robot me-2"></i>
+                        AI Transit Suggestion
+                    </h5>
+                </div>
+                <div class="card-body" id="ai-suggestion-card">
+                    <div class="text-center" id="ai-suggestion-loading">
+                        <div class="spinner-border text-info" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading AI transit suggestion...</p>
+                    </div>
+                    <div id="ai-suggestion-content" class="d-none">
+                        <div class="row">
+                            <div class="col-md-2 text-center mb-3">
+                                <div id="ai-icon">
+                                    <i class="fas fa-brain fa-4x text-info"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-10">
+                                <h5>Personalized Transit Suggestion:</h5>
+                                <div id="ai-suggestion-text" class="alert alert-info">
+                                    <i class="fas fa-spinner fa-spin me-2"></i> Loading suggestion...
+                                </div>
+                                <div id="ai-suggestion-formatted" class="d-none">
+                                    <div class="card border-info mb-2">
+                                        <div class="card-header bg-info text-white py-1"><strong id="ai-summary"></strong></div>
+                                        <div class="card-body py-2">
+                                            <div class="row mb-1">
+                                                <div class="col-md-4"><i class="fas fa-tshirt me-2"></i> <strong>What to Wear:</strong></div>
+                                                <div class="col-md-8" id="ai-wear"></div>
+                                            </div>
+                                            <div class="row mb-1">
+                                                <div class="col-md-4"><i class="fas fa-bus me-2"></i> <strong>Transit Tips:</strong></div>
+                                                <div class="col-md-8" id="ai-tips"></div>
+                                            </div>
+                                            <div class="row" id="ai-advice-row">
+                                                <div class="col-md-4"><i class="fas fa-info-circle me-2"></i> <strong>Additional Advice:</strong></div>
+                                                <div class="col-md-8" id="ai-advice"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        5-Day Transit Forecast
+                    </h5>
+                </div>
+                <div class="card-body" id="forecast-card">
+                    <div class="text-center" id="forecast-loading">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading 5-day forecast...</p>
+                    </div>
+                    <div id="forecast-content" class="d-none">
+                        <p class="lead mb-4">Plan your transit trips in advance with our 5-day forecast of expected transit conditions.</p>
+                        <div class="row" id="forecast-days">
+                            <!-- Forecast days will be inserted here -->
+                        </div>
+                    </div>
+                    <div id="forecast-error" class="alert alert-danger d-none">
+                        <i class="fas fa-exclamation-circle me-2"></i> 
+                        Unable to load transit forecast. Please try again later.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCurrentConditions();
+        loadServiceAlerts();
+        loadTransitForecast();
+        loadAiSuggestion();
+    });
+    
+    function loadAiSuggestion() {
+        // Default to Calgary coordinates
+        const lat = 51.0447;
+        const lon = -114.0719;
+        
+        fetch(`/api/transit-conditions?lat=${lat}&lon=${lon}`)
+            .then(response => response.json())
+            .then(data => {
+                // Update AI suggestion card
+                document.getElementById('ai-suggestion-loading').classList.add('d-none');
+                document.getElementById('ai-suggestion-content').classList.remove('d-none');
+                
+                if (data.ai_suggestion) {
+                    // First, show the raw text version
+                    const suggestionText = document.getElementById('ai-suggestion-text');
+                    suggestionText.innerHTML = `<i class="fas fa-robot me-2 text-info"></i> ${data.ai_suggestion}`;
+                    
+                    // Try to parse the structured format
+                    try {
+                        const suggestion = data.ai_suggestion;
+                        const formatted = document.getElementById('ai-suggestion-formatted');
+                        
+                        // Extract the sections using regex
+                        const summaryMatch = suggestion.match(/Quick Summary:\s*(.*?)(?:\n|$)/i);
+                        const wearMatch = suggestion.match(/What to Wear:\s*(.*?)(?:\n|$)/i);
+                        const tipsMatch = suggestion.match(/Transit Tips:\s*(.*?)(?:\n|$)/i);
+                        const adviceMatch = suggestion.match(/Additional Advice:\s*(.*?)(?:\n|$)/i);
+                        
+                        // If we have at least the key elements, show the formatted version
+                        if (summaryMatch && wearMatch && tipsMatch) {
+                            // Hide the raw text and show the formatted version
+                            suggestionText.classList.add('d-none');
+                            formatted.classList.remove('d-none');
+                            
+                            // Fill in the formatted card
+                            document.getElementById('ai-summary').textContent = summaryMatch[1].trim();
+                            document.getElementById('ai-wear').textContent = wearMatch[1].trim();
+                            document.getElementById('ai-tips').textContent = tipsMatch[1].trim();
+                            
+                            if (adviceMatch) {
+                                document.getElementById('ai-advice').textContent = adviceMatch[1].trim();
+                                document.getElementById('ai-advice-row').classList.remove('d-none');
+                            } else {
+                                document.getElementById('ai-advice-row').classList.add('d-none');
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Error parsing AI suggestion:', err);
+                        // If parsing fails, the raw text is already displayed
+                    }
+                } else {
+                    // Show a message if no AI suggestion is available
+                    document.getElementById('ai-suggestion-text').innerHTML = 
+                        '<i class="fas fa-exclamation-circle me-2"></i> AI transit suggestion not available at this time.';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading AI suggestion:', error);
+                document.getElementById('ai-suggestion-loading').classList.add('d-none');
+                document.getElementById('ai-suggestion-content').classList.remove('d-none');
+                document.getElementById('ai-suggestion-text').innerHTML = 
+                    '<i class="fas fa-exclamation-circle me-2 text-danger"></i> Unable to load AI transit suggestion. Please try again later.';
+            });
+    }
+    
+    function loadCurrentConditions() {
+        // Default to Calgary coordinates
+        const lat = 51.0447;
+        const lon = -114.0719;
+        
+        fetch(`/api/transit-conditions?lat=${lat}&lon=${lon}`)
+            .then(response => response.json())
+            .then(data => {
+                // Update conditions card
+                document.getElementById('current-conditions-loading').classList.add('d-none');
+                document.getElementById('current-conditions-content').classList.remove('d-none');
+                
+                // Update weather section
+                if (data.weather) {
+                    document.getElementById('weather-temp').textContent = `${data.weather.temperature}°C`;
+                    document.getElementById('weather-desc').textContent = data.weather.description;
+                    
+                    // Update weather icon
+                    let weatherIcon = 'fa-cloud-sun';
+                    const condition = data.weather.condition.toLowerCase();
+                    if (condition.includes('clear') || condition.includes('sun')) {
+                        weatherIcon = 'fa-sun';
+                    } else if (condition.includes('rain') || condition.includes('drizzle')) {
+                        weatherIcon = 'fa-cloud-rain';
+                    } else if (condition.includes('snow')) {
+                        weatherIcon = 'fa-snowflake';
+                    } else if (condition.includes('thunder')) {
+                        weatherIcon = 'fa-bolt';
+                    } else if (condition.includes('fog') || condition.includes('mist')) {
+                        weatherIcon = 'fa-smog';
+                    } else if (condition.includes('cloud')) {
+                        weatherIcon = 'fa-cloud';
+                    }
+                    
+                    document.getElementById('weather-icon').innerHTML = `<i class="fas ${weatherIcon} fa-4x text-primary"></i>`;
+                }
+                
+                // Update status and impact
+                document.getElementById('conditions-status').textContent = data.overall_status;
+                
+                // Set impact badge color based on level
+                let impactColor = 'bg-success';
+                let impactText = 'Low Impact';
+                
+                if (data.transit_impact && data.transit_impact.impact_level) {
+                    if (data.transit_impact.impact_level === 'high') {
+                        impactColor = 'bg-danger';
+                        impactText = 'High Impact';
+                    } else if (data.transit_impact.impact_level === 'medium') {
+                        impactColor = 'bg-warning text-dark';
+                        impactText = 'Medium Impact';
+                    } else if (data.transit_impact.impact_level === 'low') {
+                        impactColor = 'bg-success';
+                        impactText = 'Low Impact';
+                    }
+                }
+                
+                document.getElementById('impact-badge').innerHTML = 
+                    `<span class="badge ${impactColor}">Impact: ${impactText}</span>`;
+                
+                // Set alerts badge
+                const alertsCount = data.alerts_count || 0;
+                let alertsColor = 'bg-success';
+                
+                if (alertsCount > 0) {
+                    alertsColor = 'bg-warning text-dark';
+                }
+                
+                document.getElementById('alerts-badge').innerHTML = 
+                    `<span class="badge ${alertsColor}">Alerts: ${alertsCount}</span>`;
+                
+                // Update recommendations
+                if (data.recommendations && data.recommendations.length > 0) {
+                    const recList = document.getElementById('recommendations-list');
+                    recList.innerHTML = '';
+                    
+                    data.recommendations.forEach(rec => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.innerHTML = `<i class="fas fa-check me-2 text-success"></i> ${rec}`;
+                        recList.appendChild(li);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading transit conditions:', error);
+                document.getElementById('current-conditions-loading').classList.add('d-none');
+                document.getElementById('current-conditions-content').classList.remove('d-none');
+                document.getElementById('conditions-status').textContent = 'Unable to load transit conditions';
+                document.getElementById('conditions-status').classList.add('text-danger');
+                document.getElementById('recommendations-list').innerHTML = 
+                    '<li class="list-group-item list-group-item-danger">Error loading transit conditions. Please try again later.</li>';
+            });
+    }
+    
+    function loadServiceAlerts() {
+        fetch('/api/alerts')
+            .then(response => response.json())
+            .then(data => {
+                // Update alerts card
+                document.getElementById('alerts-loading').classList.add('d-none');
+                document.getElementById('alerts-content').classList.remove('d-none');
+                
+                const alertsList = document.getElementById('alerts-list');
+                
+                if (data && data.length > 0) {
+                    alertsList.innerHTML = '';
+                    
+                    // Process a maximum of 5 alerts to avoid overwhelming the UI
+                    const alertsToShow = data.slice(0, 5);
+                    
+                    alertsToShow.forEach(alert => {
+                        // Create alert card
+                        const alertCard = document.createElement('div');
+                        alertCard.className = 'alert alert-warning mb-3';
+                        
+                        // Determine badge based on effect
+                        let severity = 'info';
+                        if (alert.effect.toLowerCase().includes('delay')) {
+                            severity = 'warning';
+                        } else if (alert.effect.toLowerCase().includes('detour') || 
+                                   alert.effect.toLowerCase().includes('cancel')) {
+                            severity = 'danger';
+                        }
+                        
+                        // Format time range
+                        let timeRange = '';
+                        if (alert.active_period && alert.active_period.length > 0) {
+                            const period = alert.active_period[0];
+                            if (period.start && period.end) {
+                                timeRange = `<div class="small mt-1">
+                                    <i class="fas fa-clock me-1"></i> 
+                                    From: ${new Date(period.start * 1000).toLocaleString()} 
+                                    Until: ${new Date(period.end * 1000).toLocaleString()}
+                                </div>`;
+                            } else if (period.start) {
+                                timeRange = `<div class="small mt-1">
+                                    <i class="fas fa-clock me-1"></i> 
+                                    Started: ${new Date(period.start * 1000).toLocaleString()}
+                                </div>`;
+                            }
+                        }
+                        
+                        // Create alert content
+                        alertCard.innerHTML = `
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-${severity} me-2">${alert.effect}</span>
+                                <strong>${alert.header_text || 'Service Alert'}</strong>
+                            </div>
+                            <p>${alert.description_text || 'No description available'}</p>
+                            ${timeRange}
+                            <div class="small mt-1">
+                                <i class="fas fa-bus me-1"></i> Affected: 
+                                ${alert.affected_entities ? alert.affected_entities.map(e => e.route_id || e.stop_id || 'System-wide').join(', ') : 'System-wide'}
+                            </div>
+                        `;
+                        
+                        alertsList.appendChild(alertCard);
+                    });
+                    
+                    // If there are more alerts, add a "show more" message
+                    if (data.length > 5) {
+                        const moreAlertsMsg = document.createElement('div');
+                        moreAlertsMsg.className = 'alert alert-info';
+                        moreAlertsMsg.innerHTML = `
+                            <i class="fas fa-info-circle me-2"></i>
+                            And ${data.length - 5} more alerts are active. Check transit agency website for all alerts.
+                        `;
+                        alertsList.appendChild(moreAlertsMsg);
+                    }
+                } else {
+                    // No alerts
+                    document.getElementById('no-alerts').classList.remove('d-none');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading service alerts:', error);
+                document.getElementById('alerts-loading').classList.add('d-none');
+                document.getElementById('alerts-content').classList.remove('d-none');
+                
+                const alertsList = document.getElementById('alerts-list');
+                alertsList.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Unable to load service alerts. Please try again later.
+                    </div>
+                `;
+            });
+    }
+    
+    function loadTransitForecast() {
+        // Default to Calgary coordinates
+        const lat = 51.0447;
+        const lon = -114.0719;
+        
+        fetch(`/api/transit-forecast?lat=${lat}&lon=${lon}`)
+            .then(response => response.json())
+            .then(data => {
+                // Update forecast card
+                document.getElementById('forecast-loading').classList.add('d-none');
+                
+                if (data.forecast_available && data.forecasts && data.forecasts.length > 0) {
+                    document.getElementById('forecast-content').classList.remove('d-none');
+                    
+                    const forecastContainer = document.getElementById('forecast-days');
+                    forecastContainer.innerHTML = '';
+                    
+                    data.forecasts.forEach(day => {
+                        // Create forecast card
+                        const dayCard = document.createElement('div');
+                        dayCard.className = 'col-md-4 col-lg-2 mb-3';
+                        
+                        // Format date
+                        const date = new Date(day.date);
+                        const dayName = day.day_name;
+                        const formattedDate = `${date.getDate()}/${date.getMonth() + 1}`;
+                        
+                        // Determine impact level class
+                        let impactClass = 'success';
+                        if (day.transit_impact && day.transit_impact.impact_level) {
+                            if (day.transit_impact.impact_level === 'high') {
+                                impactClass = 'danger';
+                            } else if (day.transit_impact.impact_level === 'medium') {
+                                impactClass = 'warning';
+                            }
+                        }
+                        
+                        // Create condition icon
+                        let weatherIcon = 'fa-cloud-sun';
+                        if (day.condition) {
+                            const condition = day.condition.toLowerCase();
+                            if (condition.includes('clear') || condition.includes('sun')) {
+                                weatherIcon = 'fa-sun';
+                            } else if (condition.includes('rain') || condition.includes('drizzle')) {
+                                weatherIcon = 'fa-cloud-rain';
+                            } else if (condition.includes('snow')) {
+                                weatherIcon = 'fa-snowflake';
+                            } else if (condition.includes('thunder')) {
+                                weatherIcon = 'fa-bolt';
+                            } else if (condition.includes('fog') || condition.includes('mist')) {
+                                weatherIcon = 'fa-smog';
+                            } else if (condition.includes('cloud')) {
+                                weatherIcon = 'fa-cloud';
+                            }
+                        }
+                        
+                        // For risking recommendations
+                        let risks = '';
+                        if (day.transit_impact && day.transit_impact.risks && day.transit_impact.risks.length > 0) {
+                            risks = `
+                                <div class="mt-2">
+                                    <small class="text-${impactClass}">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        ${day.transit_impact.risks[0]}
+                                    </small>
+                                </div>
+                            `;
+                        }
+                        
+                        // Create card HTML
+                        dayCard.innerHTML = `
+                            <div class="card h-100 border-${impactClass}">
+                                <div class="card-header bg-${impactClass} text-white text-center">
+                                    <strong>${dayName}</strong> (${formattedDate})
+                                </div>
+                                <div class="card-body text-center">
+                                    <div class="mb-2">
+                                        <i class="fas ${weatherIcon} fa-2x text-primary"></i>
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="temperature">${day.min_temp}° / ${day.max_temp}°C</span>
+                                    </div>
+                                    <div>
+                                        <span class="condition">${day.condition}</span>
+                                    </div>
+                                    <div class="mt-3">
+                                        <span class="badge bg-${impactClass}">
+                                            ${day.overall_status}
+                                        </span>
+                                    </div>
+                                    ${risks}
+                                </div>
+                                <div class="card-footer bg-light text-center">
+                                    <small>
+                                        <i class="fas fa-tachometer-alt me-1"></i>
+                                        Delay Factor: ${day.transit_impact ? day.transit_impact.delay_factor : '1.0'}x
+                                    </small>
+                                </div>
+                            </div>
+                        `;
+                        
+                        forecastContainer.appendChild(dayCard);
+                    });
+                } else {
+                    // No forecast available
+                    document.getElementById('forecast-error').classList.remove('d-none');
+                    document.getElementById('forecast-error').innerHTML = `
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        ${data.error || 'Unable to load transit forecast. Please try again later.'}
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading transit forecast:', error);
+                document.getElementById('forecast-loading').classList.add('d-none');
+                document.getElementById('forecast-error').classList.remove('d-none');
+            });
+    }
+</script>
+{% endblock %}
