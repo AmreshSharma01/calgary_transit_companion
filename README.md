@@ -14,6 +14,17 @@ A comprehensive web application for tracking Calgary transit with real-time info
 - **Natural language interface** for intuitive transit guides
 - **Transit conditions dashboard** showing system-wide status
 
+## Project UI Interface
+### Home page
+![image](https://github.com/user-attachments/assets/455fe57e-0355-4b3c-b8b1-9ff55b0890cd)
+### Live Transit Route Details
+![image](https://github.com/user-attachments/assets/e7857498-c27a-4017-9ab0-831cee2a64f6)
+### Transit Conditions Dashboard
+![image](https://github.com/user-attachments/assets/63ca707d-e3b3-48e5-85a4-eb12d76d3a0b)
+![image](https://github.com/user-attachments/assets/61df8097-a217-4b79-affc-8311fb53cee6)
+![image](https://github.com/user-attachments/assets/4a0d668f-326d-4356-9b03-11bb29c71f28)
+
+
 ## Tech Stack
 
 - **Backend**: Flask, SQLAlchemy, JWT Authentication
@@ -63,6 +74,10 @@ flask db upgrade
 7. Run the application:
 ```
 flask run
+```
+Or, simply using this command:
+```
+python main.py
 ```
 
 ## API Documentation
