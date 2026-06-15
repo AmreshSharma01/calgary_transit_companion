@@ -160,6 +160,6 @@ git checkout -b feature/your-feature-name
 ## Team
 
 - [@AmreshSharma01](https://github.com/AmreshSharma01) - Amresh Sharma (API , Authentication and Backend)
-- [@NishathRuksana](https://github.com/NishathRuksana) - Nishath Ruksana (Frontend, Advanced Features, Backend and Data Management)
-- [@Ujjal-Baniya](https://github.com/Ujjal-Baniya) - Ujjal Baniya (Backend and Data Management)
+- [@NishathRuksana](https://github.com/NishathRuksana) - Nishath Ruksana (Backend and Data Management, Frontend, Advanced Features like AI and ML integration)
+- [@Ujjal-Baniya](https://github.com/Ujjal-Baniya) - Ujjal Baniya (Backend)
 
