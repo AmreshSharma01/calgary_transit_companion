@@ -5,6 +5,12 @@ A comprehensive web application for tracking Calgary transit with real-time info
 ## Project Visual Walkthrough
 ![Project Walkthrough](visual_walkthrough.png)
 
+## Team Members
+
+- [@AmreshSharma01](https://github.com/AmreshSharma01) - Amresh Sharma (API , Authentication and Backend)
+- [@NishathRuksana](https://github.com/NishathRuksana) - Nishath Ruksana (Backend and Data Management, Frontend, Advanced Features like AI and ML integration)
+- [@Ujjal-Baniya](https://github.com/Ujjal-Baniya) - Ujjal Baniya (Backend)
+
 ## Features
 
 - **Real-time transit tracking** with vehicle positions on interactive map
