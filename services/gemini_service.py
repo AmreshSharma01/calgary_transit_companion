@@ -5,10 +5,10 @@ from google import genai
 import requests
 
 # Configuration
-OPENWEATHER_API_KEY = "88ce1e9d33a3a8e789ac2d43a9847a1a"
+OPENWEATHER_API_KEY = "88ce1e9d33a3a8e77a1a"
 CITY_NAME = "Calgary"
 COUNTRY_CODE = "CA"
-GEMINI_API_KEY = "AIzaSyBfaoqr3dIY81EtJTsX7I0nIJ30pQJ8tRY"
+GEMINI_API_KEY = "AIzaSyBfaoq7I0nIJ30pQJ8tRY"
 
 def get_weather(city, country_code, api_key):
     """
